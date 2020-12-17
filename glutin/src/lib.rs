@@ -303,7 +303,7 @@ pub enum CreationError {
     NoBackendAvailable(Box<dyn std::error::Error + Send + Sync>),
     RobustnessNotSupported,
     OpenGlVersionNotSupported,
-    NoAvailablePixelFormat,
+    NoAvailablePixelFormat(String),
     PlatformSpecific(String),
     Window(OsError),
     /// We received multiple errors, instead of one.
@@ -318,6 +318,7 @@ impl CreationError {
         target_os = "netbsd",
         target_os = "openbsd",
     ))]
+    #[cfg(feature = "x11")]
     pub(crate) fn append(self, err: CreationError) -> Self {
         match self {
             CreationError::CreationErrors(mut errs) => {
@@ -342,7 +343,7 @@ impl CreationError {
             CreationError::OpenGlVersionNotSupported => {
                 "The requested OpenGL version is not supported."
             }
-            CreationError::NoAvailablePixelFormat => {
+            CreationError::NoAvailablePixelFormat(_) => {
                 "Couldn't find any pixel format that matches the criteria."
             }
             CreationError::PlatformSpecific(ref text) => &text,

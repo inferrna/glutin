@@ -111,7 +111,7 @@ pub fn build_nsattributes(
     }
 
     if pf_reqs.release_behavior != ReleaseBehavior::Flush {
-        return Err(CreationError::NoAvailablePixelFormat);
+        return Err(CreationError::NoAvailablePixelFormat("../glutin-as/glutin/src/platform_impl/macos/helpers.rs:114:".into()));
     }
 
     if pf_reqs.stereoscopy {

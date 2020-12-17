@@ -864,6 +864,7 @@ pub struct ContextPrototype<'a> {
     target_os = "netbsd",
     target_os = "openbsd",
 ))]
+#[cfg(feature = "x11")]
 pub fn get_native_visual_id(
     display: ffi::egl::types::EGLDisplay,
     config_id: ffi::egl::types::EGLConfig,
@@ -895,6 +896,7 @@ impl<'a> ContextPrototype<'a> {
         target_os = "netbsd",
         target_os = "openbsd",
     ))]
+    #[cfg(feature = "x11")]
     pub fn get_native_visual_id(&self) -> ffi::egl::types::EGLint {
         get_native_visual_id(self.display, self.config_id)
     }
@@ -1137,7 +1139,11 @@ where
     ) -> Result<ffi::egl::types::EGLConfig, ()>,
 {
     let egl = EGL.as_ref().unwrap();
-
+    eprintln!("{:?}", pf_reqs);
+    eprintln!("egl_version = {:?}", egl_version);
+    eprintln!("surface_type = {:?}", &surface_type);
+    eprintln!("opengl = {:?}", opengl);
+    eprintln!("api = {:?}", &api);
     let descriptor = {
         let mut out: Vec<raw::c_int> = Vec::with_capacity(37);
 
@@ -1157,7 +1163,7 @@ where
         match (api, version) {
             (Api::OpenGlEs, Some((3, _))) => {
                 if egl_version < &(1, 3) {
-                    return Err(CreationError::NoAvailablePixelFormat);
+                    return Err(CreationError::OpenGlVersionNotSupported);
                 }
                 out.push(ffi::egl::RENDERABLE_TYPE as raw::c_int);
                 out.push(ffi::egl::OPENGL_ES3_BIT as raw::c_int);
@@ -1166,7 +1172,7 @@ where
             }
             (Api::OpenGlEs, Some((2, _))) => {
                 if egl_version < &(1, 3) {
-                    return Err(CreationError::NoAvailablePixelFormat);
+                    return Err(CreationError::OpenGlVersionNotSupported);
                 }
                 out.push(ffi::egl::RENDERABLE_TYPE as raw::c_int);
                 out.push(ffi::egl::OPENGL_ES2_BIT as raw::c_int);
@@ -1184,7 +1190,7 @@ where
             (Api::OpenGlEs, _) => unimplemented!(),
             (Api::OpenGl, _) => {
                 if egl_version < &(1, 3) {
-                    return Err(CreationError::NoAvailablePixelFormat);
+                    return Err(CreationError::OpenGlVersionNotSupported);
                 }
                 out.push(ffi::egl::RENDERABLE_TYPE as raw::c_int);
                 out.push(ffi::egl::OPENGL_BIT as raw::c_int);
@@ -1204,6 +1210,7 @@ where
         }
 
         if let Some(color) = pf_reqs.color_bits {
+            eprintln!("color = {}", &color);
             out.push(ffi::egl::RED_SIZE as raw::c_int);
             out.push((color / 3) as raw::c_int);
             out.push(ffi::egl::GREEN_SIZE as raw::c_int);
@@ -1217,31 +1224,35 @@ where
         }
 
         if let Some(alpha) = pf_reqs.alpha_bits {
+            eprintln!("alpha = {}", &alpha);
             out.push(ffi::egl::ALPHA_SIZE as raw::c_int);
             out.push(alpha as raw::c_int);
         }
 
         if let Some(depth) = pf_reqs.depth_bits {
+            eprintln!("depth = {}", &depth);
             out.push(ffi::egl::DEPTH_SIZE as raw::c_int);
             out.push(depth as raw::c_int);
         }
 
         if let Some(stencil) = pf_reqs.stencil_bits {
+            eprintln!("stencil = {}", &stencil);
             out.push(ffi::egl::STENCIL_SIZE as raw::c_int);
             out.push(stencil as raw::c_int);
         }
 
         if let Some(true) = pf_reqs.double_buffer {
-            return Err(CreationError::NoAvailablePixelFormat);
+            return Err(CreationError::NoAvailablePixelFormat("../glutin-as/glutin/src/api/egl/mod.rs:1237:".into()));
         }
 
         if let Some(multisampling) = pf_reqs.multisampling {
+            eprintln!("multisampling = {}", &multisampling);
             out.push(ffi::egl::SAMPLES as raw::c_int);
             out.push(multisampling as raw::c_int);
         }
 
         if pf_reqs.stereoscopy {
-            return Err(CreationError::NoAvailablePixelFormat);
+            return Err(CreationError::NoAvailablePixelFormat("../glutin-as/glutin/src/api/egl/mod.rs:1246:".into()));
         }
 
         if let Some(xid) = pf_reqs.x11_visual_xid {
@@ -1269,17 +1280,17 @@ where
         display,
         descriptor.as_ptr(),
         std::ptr::null_mut(),
-        0,
+        1,
         &mut num_configs,
     ) == 0
     {
         return Err(CreationError::OsError(
-            "eglChooseConfig failed".to_string(),
+            "eglChooseConfig failed a".to_string(),
         ));
     }
 
     if num_configs == 0 {
-        return Err(CreationError::NoAvailablePixelFormat);
+        return Err(CreationError::NoAvailablePixelFormat("../glutin-as/glutin/src/api/egl/mod.rs:1284:".into()));
     }
 
     let mut config_ids = Vec::with_capacity(num_configs as usize);
@@ -1293,7 +1304,7 @@ where
     ) == 0
     {
         return Err(CreationError::OsError(
-            "eglChooseConfig failed".to_string(),
+            "eglChooseConfig failed b".to_string(),
         ));
     }
 
@@ -1332,11 +1343,11 @@ where
         .collect::<Vec<_>>();
 
     if config_ids.is_empty() {
-        return Err(CreationError::NoAvailablePixelFormat);
+        return Err(CreationError::NoAvailablePixelFormat("../glutin-as/glutin/src/api/egl/mod.rs:1337:".into()));
     }
 
     let config_id = config_selector(config_ids, display)
-        .map_err(|_| CreationError::NoAvailablePixelFormat)?;
+        .map_err(|_| CreationError::NoAvailablePixelFormat("../glutin-as/glutin/src/api/egl/mod.rs:1341:".into()))?;
 
     // analyzing each config
     macro_rules! attrib {

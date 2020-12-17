@@ -120,10 +120,10 @@ impl Context {
                     hdc,
                     pf_reqs,
                 )
-                .map_err(|_| CreationError::NoAvailablePixelFormat)?
+                .map_err(|_| CreationError::NoAvailablePixelFormat("../glutin-as/glutin/src/api/wgl/mod.rs:123:".into()))?
             } else {
                 choose_native_pixel_format_id(hdc, pf_reqs)
-                    .map_err(|_| CreationError::NoAvailablePixelFormat)?
+                    .map_err(|_| CreationError::NoAvailablePixelFormat("../glutin-as/glutin/src/api/wgl/mod.rs:126:".into()))?
             };
 
             set_pixel_format(hdc, id)?;
@@ -137,10 +137,10 @@ impl Context {
                 hdc,
                 pixel_format_id,
             )
-            .map_err(|_| CreationError::NoAvailablePixelFormat)?
+            .map_err(|_| CreationError::NoAvailablePixelFormat("../glutin-as/glutin/src/api/wgl/mod.rs:140:".into()))?
         } else {
             choose_native_pixel_format(hdc, pf_reqs, pixel_format_id)
-                .map_err(|_| CreationError::NoAvailablePixelFormat)?
+                .map_err(|_| CreationError::NoAvailablePixelFormat("../glutin-as/glutin/src/api/wgl/mod.rs:143:".into()))?
         };
 
         // creating the OpenGL context

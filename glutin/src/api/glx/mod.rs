@@ -5,6 +5,7 @@
     target_os = "netbsd",
     target_os = "openbsd",
 ))]
+#![cfg(feature = "x11")]
 
 mod make_current_guard;
 mod glx {
@@ -661,7 +662,7 @@ unsafe fn choose_fbconfig(
             if check_ext(extensions, "GLX_ARB_fbconfig_float") {
                 out.push(ffi::glx_extra::RGBA_FLOAT_BIT_ARB as raw::c_int);
             } else {
-                return Err(CreationError::NoAvailablePixelFormat);
+                return Err(CreationError::NoAvailablePixelFormat("../glutin-as/glutin/src/api/glx/mod.rs:665:".into()));
             }
         } else {
             out.push(ffi::glx::RGBA_BIT as raw::c_int);
@@ -706,7 +707,7 @@ unsafe fn choose_fbconfig(
                 out.push(ffi::glx_extra::SAMPLES_ARB as raw::c_int);
                 out.push(multisampling as raw::c_int);
             } else {
-                return Err(CreationError::NoAvailablePixelFormat);
+                return Err(CreationError::NoAvailablePixelFormat("../glutin-as/glutin/src/api/glx/mod.rs:710:".into()));
             }
         }
 
@@ -725,7 +726,7 @@ unsafe fn choose_fbconfig(
                 );
                 out.push(1);
             } else {
-                return Err(CreationError::NoAvailablePixelFormat);
+                return Err(CreationError::NoAvailablePixelFormat("../glutin-as/glutin/src/api/glx/mod.rs:729:".into()));
             }
         }
 
@@ -765,10 +766,10 @@ unsafe fn choose_fbconfig(
             &mut num_configs,
         );
         if configs.is_null() {
-            return Err(CreationError::NoAvailablePixelFormat);
+            return Err(CreationError::NoAvailablePixelFormat("../glutin-as/glutin/src/api/glx/mod.rs:769:".into()));
         }
         if num_configs == 0 {
-            return Err(CreationError::NoAvailablePixelFormat);
+            return Err(CreationError::NoAvailablePixelFormat("../glutin-as/glutin/src/api/glx/mod.rs:772:".into()));
         }
 
         match crate::platform_impl::x11_utils::select_config(
@@ -801,7 +802,7 @@ unsafe fn choose_fbconfig(
             }
             Err(()) => {
                 (xconn.xlib.XFree)(configs as *mut _);
-                return Err(CreationError::NoAvailablePixelFormat);
+                return Err(CreationError::NoAvailablePixelFormat("../glutin-as/glutin/src/api/glx/mod.rs:805:".into()));
             }
         }
     };
